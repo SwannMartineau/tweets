@@ -1,17 +1,30 @@
 from flask import Flask, request, jsonify # Importation de Flask pour créer l'API
 from textblob import TextBlob # Pour analyser le sentiment des tweets
 from model import train_model, predict_feeling
-
+import time
+import threading
 # Init de l'app Flask
 app = Flask(__name__)
+
+# Cronjob pour entraîner le modèle tous les 7 jours
+def schedule_retraining():
+    while True:
+        print("Début du réentraînement hebdomadaire...")
+        # Mettre en global 
+        global model, vectorizer
+        model, vectorizer = train_model()
+        print("Réentraînement terminé.")
+        # Attendre 7 jours (en secondes)
+        time.sleep(7 * 24 * 60 * 60)
+
+# Lancer la tâche planifiée dans un thread séparé
+threading.Thread(target=schedule_retraining, daemon=True).start()
 
 # Endpoint POST pour analyser les sentiments des tweets
 @app.route('/analyze_feeling', methods=['POST'])
 
 def analyze_feeling():
     try:
-        # Entraîner le modèle avec les 100 derniers tweets
-        model, vectorizer = train_model()
         
         if model is None or vectorizer is None:
             return jsonify({'error': 'Erreur lors de l\'entraînement du modèle'}), 500
@@ -27,10 +40,10 @@ def analyze_feeling():
         # On vérifie si c'est une liste
         if not isinstance(tweets,list):
             return jsonify({'error': 'Les tweets doivent être un tableau"'}), 400
-        
+
         # On instancie le résultat
         results = {}
-        
+
         for tweet in tweets:
             if not isinstance(tweet,str):
                 results[tweet] = 'Invalid input (this is not a string)'

@@ -2,6 +2,7 @@ import nltk
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix, classification_report
 import pandas as pd
 import re
 from db_service import get_last_100_tweets  # Importation de la fonction pour récupérer les 100 derniers tweets
@@ -18,10 +19,10 @@ def clean_text(text):
 def train_model():
     # Récupérer les 100 derniers tweets de la base de données
     tweets_data = get_last_100_tweets()
-    
+
     # Pour voir les problèmes potentiels avec la récupération des datas
     # print("Données récupérées:", tweets_data)
-    
+
     if not tweets_data:
         print("Aucun tweet trouvé pour l'entraînement.")
         return None, None
@@ -29,7 +30,7 @@ def train_model():
     # Convertir en DataFrame
     df = pd.DataFrame(tweets_data, columns=['text', 'positive', 'negative'])
     
-    # On peut utiliser la colonne 'positive' comme label (1 pour positif, 0 pour négatif)
+    # On peut utiliser la colonne 'positive' comme label (1 pour positif, 0 pour négatif) car si c'est pas positif c'est négatif
     df['sentiment'] = df['positive'].apply(lambda x: 1 if x == 1 else 0)
     
     # Appliquer le nettoyage
@@ -51,8 +52,14 @@ def train_model():
 
     # Évaluation du modèle (sur l'ensemble de test)
     y_pred = model.predict(X_test)
-    accuracy = (y_pred == y_test).mean()
-    print(f"Accuracy: {accuracy}")
+
+    # Générer et afficher la matrice de confusion
+    cm = confusion_matrix(y_test, y_pred)
+    print("\nMatrice de confusion :\n", cm)
+    
+    # Rapport de classification (Précision, Rappel, F1-score)
+    report = classification_report(y_test, y_pred, target_names=['Négatif', 'Positif'])
+    print("\n Rapport de classification :\n", report)
 
     # Retourner le modèle et le vectorizer pour pouvoir transformer les nouveaux tweets
     return model, vectorizer
