@@ -1,0 +1,1 @@
+pip install Flask TextBlob mysql-connector-python python-dotenv scikit-learn nltk pandas

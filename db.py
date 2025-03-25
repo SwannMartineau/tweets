@@ -65,6 +65,7 @@ def insert_tweets_db(tweets_csv):
             
             # Insérer les lignes dans la base de données
             for row in reader:
+                # Si vous mettez des virgules dans vos textes on rentrera dans cette condition et votre texte sera ignorée pour l'insérer dans la db
                 if len(row) != 3:
                     print(f"Ligne ignorée (format incorrect) : {row}")
                     continue
